@@ -1,6 +1,6 @@
 {
   "name": "@mana-work/mcp-server",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP Server for connecting Claude AI to Manawork project management platform",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -18,7 +18,7 @@
     "prepublishOnly": "npm run build",
     "prepack": "npm run build",
     "clean": "rm -rf dist",
-    "version": "git add -A mcp-server",
+    "version": "git add -A",
     "postversion": "git push && git push --tags"
   },
   "keywords": [
