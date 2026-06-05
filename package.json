@@ -1,0 +1,58 @@
+{
+  "name": "@manawork/mcp-server",
+  "version": "1.0.0",
+  "description": "MCP Server for connecting Claude AI to Manawork project management platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "manawork-mcp-server": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build",
+    "prepack": "npm run build",
+    "clean": "rm -rf dist",
+    "version": "git add -A mcp-server",
+    "postversion": "git push && git push --tags"
+  },
+  "keywords": [
+    "mcp",
+    "mcp-server",
+    "claude",
+    "manawork",
+    "project-management",
+    "ai",
+    "model-context-protocol",
+    "task-management"
+  ],
+  "license": "MIT",
+  "author": "Manawork",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mana-work/mcp-server"
+  },
+  "homepage": "https://github.com/mana-work/mcp-server#readme",
+  "bugs": {
+    "url": "https://github.com/mana-work/mcp-server/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
