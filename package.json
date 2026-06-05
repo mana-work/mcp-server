@@ -1,5 +1,5 @@
 {
-  "name": "@manawork/mcp-server",
+  "name": "@mana-work/mcp-server",
   "version": "1.0.0",
   "description": "MCP Server for connecting Claude AI to Manawork project management platform",
   "main": "dist/index.js",
