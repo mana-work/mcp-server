@@ -1,6 +1,10 @@
-# Manawork MCP Server
+# @mana-work/mcp-server
 
-MCP (Model Context Protocol) server that connects Claude AI to the Manawork project management platform.
+[![npm version](https://img.shields.io/npm/v/@mana-work/mcp-server.svg)](https://www.npmjs.com/package/@mana-work/mcp-server)
+
+MCP (Model Context Protocol) server that connects AI assistants to the [Manawork](https://www.manawork.com) project management platform.
+
+Works with **any MCP-compatible client** — Claude Desktop, Cursor, Windsurf, Cline, and more.
 
 ## Quick Start (3 steps)
 
@@ -8,19 +12,20 @@ MCP (Model Context Protocol) server that connects Claude AI to the Manawork proj
 
 Sign in to Manawork > **Settings** > **API Keys** > **Generate New Key**
 
-### 2. Configure Claude Desktop
+### 2. Configure your AI client
 
-Add to your Claude Desktop config:
+Add to your MCP client config:
 
-**macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`  
-**Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+**Claude Desktop —** `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows)
+
+**Cursor / Windsurf / Cline —** Similar MCP config in settings
 
 ```json
 {
   "mcpServers": {
     "manawork": {
       "command": "npx",
-      "args": ["-y", "manawork-mcp-server"],
+      "args": ["-y", "@mana-work/mcp-server"],
       "env": {
         "MANA_API_URL": "https://api.manawork.com",
         "MANA_API_KEY": "mana_sk_your_api_key_here"
@@ -30,15 +35,25 @@ Add to your Claude Desktop config:
 }
 ```
 
-### 3. Restart Claude Desktop
+### 3. Restart your AI client
 
-That's it! You can now ask Claude to manage your Manawork projects.
+That's it! You can now ask your AI assistant to manage your Manawork projects.
 
 ## Prerequisites
 
 - Node.js 18+ (for npx)
 - A Manawork account
 - An API key from Manawork Settings
+
+## Supported Clients
+
+| Client | Config Location |
+|--------|----------------|
+| Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+| Cursor | Settings → MCP |
+| Windsurf | Settings → MCP |
+| Cline | Settings → MCP Servers |
+| Any MCP client | Use the same config above |
 
 ## Configuration
 
@@ -49,14 +64,10 @@ That's it! You can now ask Claude to manage your Manawork projects.
 | `MANA_API_URL` | Yes | Your Manawork API URL (e.g., `https://api.manawork.com`) |
 | `MANA_API_KEY` | Yes | API key from Manawork Settings > API Keys |
 
-### Using with Cursor / Windsurf / Other MCP Clients
-
-Any MCP-compatible client can connect. Use the same command and env configuration.
-
-### Manual Installation (without npx)
+### Global Install (alternative to npx)
 
 ```bash
-npm install -g manawork-mcp-server
+npm install -g @mana-work/mcp-server
 ```
 
 Then use in config:
@@ -122,7 +133,7 @@ Then use in config:
 |------|-------------|
 | `search_tasks` | Search tasks by name in a project |
 
-## Example Prompts for Claude
+## Example Prompts
 
 - "Show me all my workspaces"
 - "List projects in workspace X"
@@ -136,11 +147,11 @@ Then use in config:
 ## How It Works
 
 ```
-Claude Desktop / Cursor
+AI Client (Claude / Cursor / Windsurf / Cline)
      |
      | MCP Protocol (stdio)
      v
-Manawork MCP Server (this package)
+@mana-work/mcp-server (this package)
      |
      | 1. Auto-authenticates API key → JWT
      | 2. Calls Manawork API with JWT
@@ -162,6 +173,7 @@ MongoDB
 ## Development
 
 ```bash
+git clone https://github.com/mana-work/mcp-server.git
 cd mcp-server
 npm install
 npm run build
@@ -177,14 +189,6 @@ npm run dev     # watch mode
 - Maximum 5 API keys per user
 
 ## API Key Management
-
-### Generate a key
-Manawork > Settings > API Keys > Generate New Key
-
-### Revoke a key
-Manawork > Settings > API Keys > Delete
-
-### Backend API Endpoints
 
 | Method | Path | Description |
 |--------|------|-------------|
