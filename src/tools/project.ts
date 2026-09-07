@@ -14,12 +14,16 @@ export function registerProjectTools(server: McpServer, client: ManaClient) {
       const projects = res.obj || res.data || [];
       const list = Array.isArray(projects)
         ? projects
-            .filter((p: Project) => !p.inTrashcan && !p.isSave)
-            .map(
-              (p: Project) =>
-                `- **${p.name}** (ID: ${p._id}) | Status: ${PROJECT_STATUS[p.status] || p.status} | Progress: ${p.percent}% | Tasks: ${p.tasksDone}/${p.task}`
-            )
-            .join("\n")
+          .filter((p: Project) => !p.inTrashcan && !p.isSave)
+          .map((p: Project) => {
+            // [FIX: BUG-01] backend endpoint GET /get/all/projects/<ws> ไม่ส่ง field `percent`
+            // (verified ระหว่าง retest TC-03 — output เดิมแสดง `Progress: undefined%`).
+            // คำนวณ progress จาก `tasksDone`/`task` ที่ backend ส่งจริงแทนการอ่าน field `percent`
+            // ที่หายไป + guard กรณี `task` เป็น 0 เพื่อป้องกันหารด้วยศูนย์ - 2026-07-22
+            const progress = p.task ? Math.round((p.tasksDone / p.task) * 100) : 0;
+            return `- **${p.name}** (ID: ${p._id}) | Status: ${PROJECT_STATUS[p.status] || p.status} | Progress: ${progress}% | Tasks: ${p.tasksDone}/${p.task}`;
+          })
+          .join("\n")
         : "No projects found";
       return { content: [{ type: "text", text: `# Projects\n\n${list}` }] };
     }
@@ -31,14 +35,22 @@ export function registerProjectTools(server: McpServer, client: ManaClient) {
     { projectId: z.string().describe("Project ID") },
     async ({ projectId }) => {
       const res = await client.get<Project>(`/get/project/${projectId}`);
+      // [FIX: TC-P04] backend คืน { success:false, data:"not to access", obj:null } เมื่อ projectId
+      // ไม่มีอยู่ — ก่อนหน้านี้ `res.obj || res.data` ตกลงไปที่ error string (truthy) แล้ว render
+      // `# undefined`. เช็ค success ก่อน + guard กรณี p เป็น string - 2026-07-30
+      if (!res.success) {
+        return { content: [{ type: "text", text: "Project not found" }] };
+      }
       const p = res.obj || res.data;
-      if (!p) return { content: [{ type: "text", text: "Project not found" }] };
+      if (!p || typeof p === "string") return { content: [{ type: "text", text: "Project not found" }] };
+      // [FIX: ISSUE-06] backend response ไม่มี field `_id`, `percent`, `tasksDone`,
+      // `task`, `activities` (verified จาก GET /get/project/<id> จริง) — ก่อนหน้านี้ handler
+      // อ่าน field เหล่านี้ทำให้แสดงผลเป็น "undefined"; ปรับให้ใช้ field ที่ backend ส่งจริง +
+      // ใช้ projectId จาก input แทน p._id และลบ field ที่ไม่มีออกจาก output - 2026-07-17
       const text = `# ${p.name}
 
-**ID:** ${p._id}
-**Status:** ${PROJECT_STATUS[p.status] || p.status}
-**Progress:** ${p.percent}%
-**Tasks:** ${p.tasksDone} / ${p.task} completed
+**ID:** ${projectId}
+**Status:** ${PROJECT_STATUS[p.status] ?? p.status}
 **Start Date:** ${p.start || "Not set"}
 **Due Date:** ${p.dueDate || "Not set"}
 **Done Date:** ${p.doneDate || "Not set"}
@@ -47,8 +59,8 @@ export function registerProjectTools(server: McpServer, client: ManaClient) {
 **Owner:** ${p.ownedBy}
 **Admins:** ${(p.admins || []).length} members
 **Members:** ${(p.members || []).length} members
-**Activities:** ${(p.activities || []).length}
-**Archived:** ${p.isSave ? "Yes" : "No"}`;
+**Archived:** ${p.isSave ? "Yes" : "No"}
+**Created:** ${p.createdAt || "unknown"}`;
       return { content: [{ type: "text", text }] };
     }
   );
@@ -67,12 +79,24 @@ export function registerProjectTools(server: McpServer, client: ManaClient) {
       const body: Record<string, unknown> = {
         name,
         workspaceId,
+        // [FIX: BUG-01P] backend createProject.db.js:281 เรียก model.memberTeam.map(...)
+        // แต่ก่อนหน้านี้ MCP ไม่ส่ง memberTeam -> undefined.map() throw -> คืน
+        // "create project failed". ผู้สร้างถูกเพิ่มเป็น owner/admin อัตโนมัติใน backend
+        // (createProject.db.js:270-273) จึงส่ง [] เป็นค่าเริ่มต้น - 2026-07-24
+        memberTeam: [],
       };
       if (description) body.description = description;
       if (startDate) body.start = startDate;
       if (dueDate) body.dueDate = dueDate;
 
       const res = await client.post<Project>("/create/project", body);
+      // [FIX: ISSUE-05] ตรวจ `res.success` ก่อน — ก่อนหน้านี้ใช้ `res.obj || res.data` ทำให้
+      // กรณี backend คืน `{success:false, data:"create project failed", obj:null}` ไป fallback
+      // ไปที่ `data` ซึ่งเป็น error string (truthy) แล้ว access `.name`/`._id` บน string → undefined
+      // ส่งผลให้รายงาน "Created project **undefined** (ID: undefined)" ทั้งที่จริงล้มเหลว - 2026-07-17
+      if (!res.success) {
+        return { content: [{ type: "text", text: `Failed to create project: ${res.message || res.data || "backend rejected the request"}` }] };
+      }
       const p = res.obj || res.data;
       if (!p) return { content: [{ type: "text", text: `Failed to create project: ${res.message}` }] };
       return { content: [{ type: "text", text: `Created project **${p.name}** (ID: ${p._id})` }] };

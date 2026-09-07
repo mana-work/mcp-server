@@ -85,7 +85,7 @@ Then use in config:
 }
 ```
 
-## Available Tools (20)
+## Available Tools (22)
 
 ### Workspace
 | Tool | Description |

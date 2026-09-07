@@ -12,8 +12,12 @@ export function registerSearchTools(server: McpServer, client: ManaClient) {
       projectId: z.string().describe("Project ID to search in"),
     },
     async ({ query, projectId }) => {
+      // [FIX: TC-S02] backend search.db.js อ่าน field `model.words` (ไม่ใช่ `model.text`) —
+      // verified ใน search.db.js: `model.words != "" ? { text: new RegExp(model.words, "i") } : {}`.
+      // ก่อนหน้านี้ MCP ส่ง `text` -> words undefined -> wordsTask={} -> match task ทั้งหมดใน project
+      // (gibberish คืน 91 results). ส่ง `words` ตาม contract จริง - 2026-07-30
       const res = await client.post<GanttTask[]>("/search/task", {
-        text: query,
+        words: query,
         projectId,
       });
       const tasks = res.obj || res.data || [];
