@@ -3,11 +3,11 @@ import { z } from "zod";
 import type { ManaClient } from "../client.js";
 import type { Workspace, Project } from "../types.js";
 
-// [FIX: BUG-01W/02W] helper นับจำนวน project จริงใน workspace — backend
-// /get/my/workspace และ /get/workspace/by/:id ไม่ส่ง field `projects` กลับมา
-// (verified: getMyWorkspace.db.js projection ไม่มี projects; getWorkspaceById.db.js
-// สร้าง objData โดยไม่มี key projects) ทำให้ก่อนหน้านี้ (w.projects||[]).length ติด 0 เสมอ
-// ใช้ /get/all/projects/<ws> (มีอยู่จริงใน getAllProjectsByWorkspaceId.db.js) เพื่อนับ - 2026-07-24
+// [PERF] helper นับจำนวน project จริงใน workspace — backend
+// /get/workspace/by/:id ไม่ส่ง field `projects` กลับมา จึงต้องใช้
+// /get/all/projects/<ws> ซึ่งเป็น endpoint หนัก (backend query 3-4 รอบ
+// + ยก project documents เต็ม ๆ) — ใช้เฉพาะ get_workspace เดี่ยวเท่านั้น
+// อย่าใช้ใน list_workspaces (เดิมเรียก N ครั้งต่อ N workspaces = N+1)
 async function countProjectsInWorkspace(client: ManaClient, workspaceId: string): Promise<number> {
   try {
     const res = await client.get<Project[]>(`/get/all/projects/${workspaceId}`);
@@ -25,18 +25,16 @@ export function registerWorkspaceTools(server: McpServer, client: ManaClient) {
   server.tool("list_workspaces", "List all workspaces the user has access to", {}, async () => {
     const res = await client.get<Workspace[]>("/get/my/workspace");
     const workspaces = (res.obj || res.data || []) as Workspace[];
-    // [FIX: BUG-01W] ดึงจำนวน project จริงของแต่ละ workspace (parallel) เพราะ backend
-    // ไม่ส่ง field projects มาใน /get/my/workspace - 2026-07-24
+    // [PERF] 1 call เดียว — ไม่นับ project ราย workspace แล้ว (เดิมเป็น N+1:
+    // เรียก /get/all/projects หนัก ๆ ต่อ workspace เพียงเพื่อแสดงเลขนับ)
+    // ผู้ใช้อยากรู้รายละเอียดให้เรียก get_workspace ต่อ
     const wsList = Array.isArray(workspaces) ? workspaces : [];
-    const counts = await Promise.all(
-      wsList.map((w: Workspace) => countProjectsInWorkspace(client, w._id))
-    );
     const list = wsList.length
       ? wsList
-          .map((w: Workspace, i: number) => {
-            const projectsLabel = counts[i] >= 0 ? String(counts[i]) : "unknown";
-            return `- **${w.name}** (ID: ${w._id}) | Members: ${(w.members || []).length} | Projects: ${projectsLabel}`;
-          })
+          .map(
+            (w: Workspace) =>
+              `- **${w.name}** (ID: ${w._id}) | Members: ${(w.members || []).length}`
+          )
           .join("\n")
       : "No workspaces found";
     return { content: [{ type: "text", text: `# My Workspaces\n\n${list}` }] };

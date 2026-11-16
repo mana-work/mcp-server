@@ -57,6 +57,10 @@ export class ManaClient {
     return JSON.parse(text) as T;
   }
 
+  // [PERF/RESILIENCE] timeout ทุก request 30s — กัน tool ค้างตายเมื่อ backend
+  // hang (เดิม fetch รอไม่มีที่สิ้นสุด ทำให้ AI client รอ tool call นานเกินจำเป็น)
+  private static readonly REQUEST_TIMEOUT_MS = 30_000;
+
   private async authenticate(): Promise<void> {
     if (this.token && Date.now() < this.tokenExpiry) return;
 
@@ -65,6 +69,7 @@ export class ManaClient {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ apiKey: this.apiKey }),
+      signal: AbortSignal.timeout(ManaClient.REQUEST_TIMEOUT_MS),
     });
 
     const data = await this.safeJson<ManaResponse<VerifyResponse>>(response, "POST /api-key/verify");
@@ -89,7 +94,11 @@ export class ManaClient {
       "Content-Type": "application/json",
     };
 
-    const options: RequestInit = { method, headers };
+    const options: RequestInit = {
+      method,
+      headers,
+      signal: AbortSignal.timeout(ManaClient.REQUEST_TIMEOUT_MS),
+    };
 
     if (body && (method === "POST" || method === "PUT")) {
       options.body = JSON.stringify(body);

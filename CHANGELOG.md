@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.2.0
+
+### Performance
+
+- `list_workspaces` no longer makes one heavy `/get/all/projects` call per
+  workspace (N+1). Project counts are still shown by `get_workspace`.
+- All HTTP requests now time out after 30s instead of hanging forever.
+
+### Changed
+
+- README now recommends a global install (`npm i -g @mana-work/mcp-server`)
+  which starts in ~0.5s, versus `npx -y` which adds ~4s to every session start.
+
 ## 1.1.0
 
 ### Fixed

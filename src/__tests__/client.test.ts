@@ -42,11 +42,11 @@ describe("ManaClient", () => {
 
       await client.get("/test");
       expect(mockFetch).toHaveBeenCalledTimes(2);
-      expect(mockFetch).toHaveBeenNthCalledWith(1, "https://api.manawork.com/api-key/verify", {
+      expect(mockFetch).toHaveBeenNthCalledWith(1, "https://api.manawork.com/api-key/verify", expect.objectContaining({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ apiKey: "mana_sk_testkey123" }),
-      });
+      }));
     });
 
     it("should throw on invalid API key", async () => {
@@ -92,13 +92,13 @@ describe("ManaClient", () => {
       mockFetch.mockResolvedValueOnce(mockResponse({ success: true, obj: { id: "1" } }));
 
       const res = await client.get("/test/path");
-      expect(mockFetch).toHaveBeenLastCalledWith("https://api.manawork.com/test/path", {
+      expect(mockFetch).toHaveBeenLastCalledWith("https://api.manawork.com/test/path", expect.objectContaining({
         method: "GET",
         headers: {
           Authorization: "Bearer jwt_token",
           "Content-Type": "application/json",
         },
-      });
+      }));
       expect(res.success).toBe(true);
     });
 
@@ -106,41 +106,41 @@ describe("ManaClient", () => {
       mockFetch.mockResolvedValueOnce(mockResponse({ success: true, obj: { id: "2" } }));
 
       await client.post("/create", { name: "test" });
-      expect(mockFetch).toHaveBeenLastCalledWith("https://api.manawork.com/create", {
+      expect(mockFetch).toHaveBeenLastCalledWith("https://api.manawork.com/create", expect.objectContaining({
         method: "POST",
         headers: {
           Authorization: "Bearer jwt_token",
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ name: "test" }),
-      });
+      }));
     });
 
     it("should make PUT request with body", async () => {
       mockFetch.mockResolvedValueOnce(mockResponse({ success: true }));
 
       await client.put("/update/1", { status: 3 });
-      expect(mockFetch).toHaveBeenLastCalledWith("https://api.manawork.com/update/1", {
+      expect(mockFetch).toHaveBeenLastCalledWith("https://api.manawork.com/update/1", expect.objectContaining({
         method: "PUT",
         headers: {
           Authorization: "Bearer jwt_token",
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ status: 3 }),
-      });
+      }));
     });
 
     it("should make DELETE request", async () => {
       mockFetch.mockResolvedValueOnce(mockResponse({ success: true }));
 
       await client.del("/delete/1");
-      expect(mockFetch).toHaveBeenLastCalledWith("https://api.manawork.com/delete/1", {
+      expect(mockFetch).toHaveBeenLastCalledWith("https://api.manawork.com/delete/1", expect.objectContaining({
         method: "DELETE",
         headers: {
           Authorization: "Bearer jwt_token",
           "Content-Type": "application/json",
         },
-      });
+      }));
     });
 
     it("should not send body for GET requests", async () => {

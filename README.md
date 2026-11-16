@@ -6,19 +6,44 @@ MCP (Model Context Protocol) server that connects AI assistants to the [Manawork
 
 Works with **any MCP-compatible client** — Claude Desktop, Cursor, Windsurf, Cline, and more.
 
-## Quick Start (3 steps)
+## Quick Start (4 steps)
 
 ### 1. Generate an API Key
 
 Sign in to Manawork > **Settings** > **API Keys** > **Generate New Key**
 
-### 2. Configure your AI client
+### 2. Install the server (recommended: global install)
+
+```bash
+npm install -g @mana-work/mcp-server
+```
+
+Global install starts in ~0.5s. Using `npx -y @mana-work/mcp-server` instead works too, but adds ~4s to every session start while npx resolves the package.
+
+### 3. Configure your AI client
 
 Add to your MCP client config:
 
 **Claude Desktop —** `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows)
 
 **Cursor / Windsurf / Cline —** Similar MCP config in settings
+
+```json
+{
+  "mcpServers": {
+    "manawork": {
+      "command": "manawork-mcp-server",
+      "env": {
+        "MANA_API_URL": "https://api.manawork.com",
+        "MANA_API_KEY": "mana_sk_your_api_key_here"
+      }
+    }
+  }
+}
+```
+
+<details>
+<summary>Alternative: npx (no install, slower start)</summary>
 
 ```json
 {
@@ -34,8 +59,9 @@ Add to your MCP client config:
   }
 }
 ```
+</details>
 
-### 3. Restart your AI client
+### 4. Restart your AI client
 
 That's it! You can now ask your AI assistant to manage your Manawork projects.
 
@@ -64,13 +90,8 @@ That's it! You can now ask your AI assistant to manage your Manawork projects.
 | `MANA_API_URL` | Yes | Your Manawork API URL (e.g., `https://api.manawork.com`) |
 | `MANA_API_KEY` | Yes | API key from Manawork Settings > API Keys |
 
-### Global Install (alternative to npx)
+### Config for global install
 
-```bash
-npm install -g @mana-work/mcp-server
-```
-
-Then use in config:
 ```json
 {
   "mcpServers": {
