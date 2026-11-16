@@ -22,25 +22,25 @@ export class ManaClient {
     this.apiKey = apiKey;
   }
 
-  // [FIX: ISSUE-01/02/03] shared safe JSON parser — อ่าน body เป็น text ก่อน แล้วตรวจ
+  // [FIX: ISSUE-01/02/03] shared safe JSON parser - อ่าน body เป็น text ก่อน แล้วตรวจ
   // Content-Type/รูปร่างของ body ก่อน parse JSON ก่อนหน้านี้เรียก `response.json()` ตรงๆ
   // ทำให้ body ที่เป็น HTML (เช่น error page) ทำให้เกิด `Unexpected token '<'` และ
   // empty body ทำให้เกิด `Unexpected end of JSON input` โดยที่ caller ไม่มีโอกาสรู้
-  // status/ข้อความผิดพลาดที่แท้จริง — DRY: ใช้ร่วมกันระหว่าง authenticate() และ request()
-  // หมายเหตุ: throw เฉพาะตอนที่ body ไม่ใช่ JSON เท่านั้น — กรณีที่ backend คืน JSON
+  // status/ข้อความผิดพลาดที่แท้จริง - DRY: ใช้ร่วมกันระหว่าง authenticate() และ request()
+  // หมายเหตุ: throw เฉพาะตอนที่ body ไม่ใช่ JSON เท่านั้น - กรณีที่ backend คืน JSON
   // `{ success: false, ... }` (แม้ HTTP non-ok) ยังคืนกลับให้ caller เพื่อตรวจ `success`
   // ได้ (สอดคล้องกับการแก้ ISSUE-04) - 2026-07-17
-  // [FIX: ISSUE-08] เพิ่ม guard ระดับบนสุด — ถ้า text ว่างเปล่า ให้ throw ทันที ไม่สน Content-Type
+  // [FIX: ISSUE-08] เพิ่ม guard ระดับบนสุด - ถ้า text ว่างเปล่า ให้ throw ทันที ไม่สน Content-Type
   // (ก่อนหน้านี้ heuristic `ct.includes("application/json")` ทำให้ empty body ที่มาพร้อม
   // Content-Type ถูกหลอกว่าเป็น JSON → JSON.parse("") throw `Unexpected end of JSON input`
-  // เหมือนเดิม — regression ของ ISSUE-02/03 ที่พบจาก UAT runtime probe) - 2026-07-17
+  // เหมือนเดิม - regression ของ ISSUE-02/03 ที่พบจาก UAT runtime probe) - 2026-07-17
   private async safeJson<T>(response: Response, context: string): Promise<T> {
     const text = await response.text();
     if (!text.trim()) {
       throw new Error(
         `Mana API ${context} returned non-JSON response: HTTP ${response.status}${
           response.statusText ? ` ${response.statusText}` : ""
-        } — empty body`
+        } - empty body`
       );
     }
     const ct = response.headers.get("content-type") || "";
@@ -51,13 +51,13 @@ export class ManaClient {
       throw new Error(
         `Mana API ${context} returned non-JSON response: HTTP ${response.status}${
           response.statusText ? ` ${response.statusText}` : ""
-        }` + (snippet ? ` — ${snippet}` : " — empty body")
+        }` + (snippet ? ` - ${snippet}` : " - empty body")
       );
     }
     return JSON.parse(text) as T;
   }
 
-  // [PERF/RESILIENCE] timeout ทุก request 30s — กัน tool ค้างตายเมื่อ backend
+  // [PERF/RESILIENCE] timeout ทุก request 30s - กัน tool ค้างตายเมื่อ backend
   // hang (เดิม fetch รอไม่มีที่สิ้นสุด ทำให้ AI client รอ tool call นานเกินจำเป็น)
   private static readonly REQUEST_TIMEOUT_MS = 30_000;
 
@@ -106,7 +106,7 @@ export class ManaClient {
 
     const response = await fetch(url, options);
 
-    // [FIX: ISSUE-01/02/03] ใช้ safeJson() ที่แยกออกมา (DRY กับ authenticate) — เห็นรายละเอียด
+    // [FIX: ISSUE-01/02/03] ใช้ safeJson() ที่แยกออกมา (DRY กับ authenticate) - เห็นรายละเอียด
     // ใน comment ของ safeJson() - 2026-07-17
     const data = await this.safeJson<ManaResponse<T>>(response, `${method} ${path}`);
 

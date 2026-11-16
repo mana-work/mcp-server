@@ -4,7 +4,9 @@
 
 MCP (Model Context Protocol) server that connects AI assistants to the [Manawork](https://www.manawork.com) project management platform.
 
-Works with **any MCP-compatible client** — Claude Desktop, Cursor, Windsurf, Cline, and more.
+Works with **any MCP-compatible client** - Claude Desktop, Claude Code, Cursor, Windsurf, Cline, VS Code, OpenCode, and ChatGPT Desktop (Developer Mode) / Codex CLI.
+
+> ChatGPT web/mobile connectors only accept remote MCP servers (public HTTPS URL). To use Manawork there you need a bridge (e.g. an MCP-to-HTTP proxy) - the config above works everywhere else as-is.
 
 ## Quick Start (4 steps)
 
@@ -24,9 +26,9 @@ Global install starts in ~0.5s. Using `npx -y @mana-work/mcp-server` instead wor
 
 Add to your MCP client config:
 
-**Claude Desktop —** `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows)
+**Claude Desktop -** `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows)
 
-**Cursor / Windsurf / Cline —** Similar MCP config in settings
+**Cursor / Windsurf / Cline -** Similar MCP config in settings
 
 ```json
 {
@@ -102,9 +104,15 @@ My MANA API key is the one shown above. After adding it, restart and list my wor
 | Client | Config Location |
 |--------|----------------|
 | Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+| Claude Code | `.mcp.json` in project, or `~/.claude.json` |
 | Cursor | Settings → MCP |
 | Windsurf | Settings → MCP |
 | Cline | Settings → MCP Servers |
+| VS Code (Copilot) | `.mcp.json` / MCP Servers view |
+| OpenCode | `opencode.json` → `mcp` section |
+| ChatGPT Desktop | Developer Mode (local stdio) |
+| Codex CLI | `~/.codex/config.toml` |
+| ChatGPT web/mobile | Remote MCP only - needs an HTTPS bridge |
 | Any MCP client | Use the same config above |
 
 ## Configuration

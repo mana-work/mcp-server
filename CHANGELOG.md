@@ -1,12 +1,21 @@
 # Changelog
 
+## 1.2.2
+
+### Changed
+
+- Docs now list every supported MCP client, including OpenCode,
+  ChatGPT Desktop (Developer Mode), and Codex CLI. ChatGPT web/mobile
+  connectors need a remote HTTPS bridge and are documented as such.
+- Replaced em dashes with plain hyphens across docs and comments.
+
 ## 1.2.1
 
 ### Changed
 
 - Package description and keywords now list all supported MCP clients
   (Claude Desktop, Claude Code, Cursor, Windsurf, Cline, VS Code) instead
-  of Claude only — the server itself was always client-agnostic.
+  of Claude only - the server itself was always client-agnostic.
 - README adds a copy-paste prompt users can give to any AI assistant
   to set up the Manawork MCP connection for them.
 

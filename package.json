@@ -1,7 +1,7 @@
 {
   "name": "@mana-work/mcp-server",
-  "version": "1.2.1",
-  "description": "MCP Server for connecting AI assistants (Claude Desktop, Claude Code, Cursor, Windsurf, Cline, VS Code) to the Manawork project management platform",
+  "version": "1.2.2",
+  "description": "MCP Server for connecting AI assistants (Claude Desktop, Claude Code, Cursor, Windsurf, Cline, VS Code, OpenCode, Codex) to the Manawork project management platform",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
@@ -33,6 +33,8 @@
     "windsurf",
     "cline",
     "vscode",
+    "opencode",
+    "codex",
     "manawork",
     "project-management",
     "ai",
