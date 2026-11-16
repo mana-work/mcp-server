@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.2.1
+
+### Changed
+
+- Package description and keywords now list all supported MCP clients
+  (Claude Desktop, Claude Code, Cursor, Windsurf, Cline, VS Code) instead
+  of Claude only — the server itself was always client-agnostic.
+- README adds a copy-paste prompt users can give to any AI assistant
+  to set up the Manawork MCP connection for them.
+
 ## 1.2.0
 
 ### Performance

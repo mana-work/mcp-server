@@ -65,6 +65,32 @@ Add to your MCP client config:
 
 That's it! You can now ask your AI assistant to manage your Manawork projects.
 
+## Let your AI set it up for you
+
+Copy this prompt and paste it into any AI assistant (replace the API key with yours):
+
+```text
+Connect me to my Manawork account via MCP.
+
+1. Install the server: npm i -g @mana-work/mcp-server
+2. Add this MCP server to your config
+   (same shape for Claude Desktop, Claude Code, Cursor, Windsurf, Cline, VS Code):
+
+{
+  "mcpServers": {
+    "manawork": {
+      "command": "manawork-mcp-server",
+      "env": {
+        "MANA_API_URL": "https://api.manawork.com",
+        "MANA_API_KEY": "mana_sk_your_api_key_here"
+      }
+    }
+  }
+}
+
+My MANA API key is the one shown above. After adding it, restart and list my workspaces to verify.
+```
+
 ## Prerequisites
 
 - Node.js 18+ (for npx)
