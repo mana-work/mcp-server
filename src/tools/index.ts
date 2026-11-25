@@ -6,6 +6,7 @@ import { registerTaskTools } from "./task.js";
 import { registerCommentTools } from "./comment.js";
 import { registerDashboardTools } from "./dashboard.js";
 import { registerSearchTools } from "./search.js";
+import { registerMemberTools } from "./members.js";
 
 export function registerAllTools(server: McpServer, client: ManaClient) {
   registerWorkspaceTools(server, client);
@@ -14,4 +15,5 @@ export function registerAllTools(server: McpServer, client: ManaClient) {
   registerCommentTools(server, client);
   registerDashboardTools(server, client);
   registerSearchTools(server, client);
+  registerMemberTools(server, client);
 }
