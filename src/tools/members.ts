@@ -1,15 +1,106 @@
-// members.ts — tools สำหรับดูรายชื่อ user ใน project/workspace
-// (แก้ปัญหา AI ไม่รู้ว่าใครอยู่ใน project ที่จะมอบหมายงาน)
+// members.ts — tools สำหรับดูรายชื่อ user ใน project/workspace + guide
+// (แก้ปัญหา AI agent ไม่รู้วิธีใช้ tools ที่มีอยู่)
 
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { ManaClient } from "../client.js";
 import { z } from "zod";
 
+// ── Guide: บอก AI agent ว่าทำอะไรได้บ้าง + วิธีทำ ──
+const GUIDE_TEXT = `# Manawork MCP Guide
+
+## ⚠️ IMPORTANT: You have MORE tools than you think!
+Before saying "I can't do that", check this guide — most common actions ARE supported.
+
+## Common Workflows
+
+### "ใครอยู่ในโปรเจกต์นี้บ้าง?" / "Who's in this project?"
+1. Use \`list_projects\` to get project IDs
+2. Use \`list_project_members\` with the projectId to see names, emails, and roles
+
+### "ย้ายการ์ด/งานไปโปรเจกต์อื่น" / "Move a task to another project"
+1. Use \`move_task\` with taskId + destination projectId
+- Example: "Move task abc123 to project def456" → call move_task(taskId="abc123", projectId="def456")
+
+### "มอบหมายงานให้ใคร" / "Assign a task to someone"
+1. Use \`list_project_members\` to find the person's name or email
+2. Use \`add_assignee\` with taskId + their name or email
+- You can use either userId, email, or full name
+
+### "สร้างงานใหม่" / "Create a new task"
+1. Use \`list_projects\` to get projectId
+2. Use \`create_task\` with name, startDate, endDate, priority (1=Low 2=Medium 3=High)
+- For subtasks: add parentTaskId
+
+### "เชื่อมงานให้ทำต่อกัน" / "Link tasks (dependencies)"
+Use \`create_task_link\` with sourceTaskId (must finish first) + targetTaskId (starts after)
+- Link type "0" = finish-to-start (default)
+
+### "ดูภาพรวม" / "Get overview"
+- \`get_workspace_summary\` — workspace stats
+- \`get_project_dashboard\` — project progress, cards, budget
+- \`get_overdue_tasks\` — tasks past their deadline
+
+### "ค้นหางาน" / "Search tasks"
+Use \`search_tasks\` — searches by task name, status, assignee
+
+### "เพิ่มคอมเมนต์"
+Use \`add_comment\` with taskId + text
+
+### "เพิ่ม follower"
+Use \`add_follower\` with taskId + userId
+
+## Tool Reference
+
+| Tool | What it does |
+|---|---|
+| list_workspaces | List all workspaces |
+| get_workspace | Get workspace details |
+| list_projects | List projects in workspace |
+| get_project | Get project details |
+| create_project | Create new project |
+| update_project_status | Change project status |
+| list_tasks | List tasks in project |
+| get_task | Get task details |
+| create_task | Create new task |
+| update_task | Update task fields |
+| delete_task | Delete task |
+| done_task | Mark task as done |
+| move_task | **Move task to another project** |
+| create_task_link | Create dependency between tasks |
+| search_tasks | Search tasks |
+| list_project_members | **List people in project** |
+| list_workspace_members | **List people in workspace** |
+| add_assignee | Assign person to task (by userId/email/name) |
+| remove_assignee | Remove assignee from task |
+| add_comment | Add comment to task |
+| update_comment | Edit a comment |
+| add_follower | Add follower to task |
+| get_workspace_summary | Workspace overview stats |
+| get_project_dashboard | Project progress + cards |
+| get_overdue_tasks | Overdue tasks list |
+
+## Tips
+- Always use \`list_projects\` or \`list_workspaces\` first to get valid IDs
+- For person-related tasks, use \`list_project_members\` to find the right person
+- Dates format: YYYY-MM-DD
+- Task IDs are MongoDB ObjectIds (24 hex characters)
+`;
+
 export function registerMemberTools(server: McpServer, client: ManaClient) {
+  // ── manawork_guide — AI agent เรียกดูวิธีใช้ tools ทั้งหมด ──
+  server.tool(
+    "manawork_guide",
+    "Get a guide on how to use all Manawork tools — includes common workflows, tool reference, and tips. Call this when you're unsure how to accomplish a task.",
+    {},
+    async () => {
+      return { content: [{ type: "text", text: GUIDE_TEXT }] };
+    }
+  );
+
   // ── list_project_members — ดูทุกคนใน project พร้อมชื่อ/อีเมล/บทบาท ──
   server.tool(
     "list_project_members",
-    "List all members of a project with their names, emails, and roles (admin/member). Use this before assigning tasks to find the right person.",
+    "List all members of a project with their names, emails, and roles (admin/member). IMPORTANT: Use this BEFORE assigning tasks — to find the right person and their userId.",
     {
       projectId: z.string().describe("Project ID (from list_projects)"),
     },
@@ -18,11 +109,11 @@ export function registerMemberTools(server: McpServer, client: ManaClient) {
       if (!result.success) {
         return { content: [{ type: "text", text: `Failed to list members: ${result.data}` }] };
       }
-      const members = result.obj || [];
+      const members = (result.obj as any[]) || [];
       if (members.length === 0) {
         return { content: [{ type: "text", text: "No members found in this project." }] };
       }
-      const lines = members.map((m) => {
+      const lines = members.map((m: any) => {
         const role = m.role === "admin" || m.isAdmin ? "admin" : "member";
         return `• ${m.name || m.firstName || "Unknown"} ${m.surname || m.lastName || ""} (${role}) — ${m.email || "no email"} [ID: ${m._id}]`;
       });
@@ -33,7 +124,7 @@ export function registerMemberTools(server: McpServer, client: ManaClient) {
   // ── list_workspace_members — ดูทุกคนใน workspace ──
   server.tool(
     "list_workspace_members",
-    "List all members of a workspace with their names, emails, and roles. Useful for finding who to invite to a project.",
+    "List all members of a workspace with their names, emails, and roles (admin/member/guest).",
     {
       workspaceId: z.string().describe("Workspace ID (from list_workspaces)"),
     },
@@ -42,11 +133,11 @@ export function registerMemberTools(server: McpServer, client: ManaClient) {
       if (!result.success) {
         return { content: [{ type: "text", text: `Failed to list workspace members: ${result.data}` }] };
       }
-      const members = result.obj || [];
+      const members = (result.obj as any[]) || [];
       if (members.length === 0) {
         return { content: [{ type: "text", text: "No members found in this workspace." }] };
       }
-      const lines = members.map((m) => {
+      const lines = members.map((m: any) => {
         const role = m.isAdmin ? "admin" : m.isGuest ? "guest" : "member";
         return `• ${m.name || "Unknown"} ${m.surname || ""} (${role}) — ${m.email || "no email"} [ID: ${m._id}]`;
       });
@@ -57,7 +148,7 @@ export function registerMemberTools(server: McpServer, client: ManaClient) {
   // ── move_task — ย้าย task ไป project อื่น ──
   server.tool(
     "move_task",
-    "Move a task (card) from one project to another. The task and all its subtasks will be moved.",
+    "Move a task (card) and all its subtasks to a different project. Use this when the user says 'ย้ายการ์ด', 'ย้ายงาน', 'move task', 'move card', or wants to relocate work between projects.",
     {
       taskId: z.string().describe("ID of the task to move"),
       projectId: z.string().describe("ID of the destination project"),
