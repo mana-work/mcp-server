@@ -17,9 +17,20 @@ Before saying "I can't do that", check this guide — most common actions ARE su
 1. Use \`list_projects\` to get project IDs
 2. Use \`list_project_members\` with the projectId to see names, emails, and roles
 
-### "ย้ายการ์ด/งานไปโปรเจกต์อื่น" / "Move a task to another project"
-1. Use \`move_task\` with taskId + destination projectId
-- Example: "Move task abc123 to project def456" → call move_task(taskId="abc123", projectId="def456")
+### "ย้ายการ์ด/เปลี่ยน section" / "Move card / change section"
+There are 4 ways to move tasks:
+
+1. **Change section/swimlane** (same project): \`update_task\` with \`parentId\` set to the section's task ID
+   - Example: "ย้ายไป Dev Done" → \`update_task(taskId="xxx", parentId="6a7132...")\`
+   - Use \`list_tasks\` to find section IDs (sections are parent tasks like "Ready to dev", "Dev Done", "Testing")
+   
+2. **Between projects**: \`move_task\` — moves task + subtasks to another project
+
+3. **Under a new parent** (same project): \`move_task_under_parent\` — makes task a subtask of another task
+
+4. **To another project + under a parent**: \`move_task_to_project_with_parent\` — moves and sets parent
+
+Common phrases: "ย้ายการ์ด", "ย้าย section", "ย้ายไป Dev Done", "move card", "change section", "ย้ายไปใต้"
 
 ### "มอบหมายงานให้ใคร" / "Assign a task to someone"
 1. Use \`list_project_members\` to find the person's name or email
@@ -62,10 +73,13 @@ Use \`add_follower\` with taskId + userId
 | list_tasks | List tasks in project |
 | get_task | Get task details |
 | create_task | Create new task |
-| update_task | Update task fields |
+| update_task | Update task — **including parentId (change section/swimlane)**, name, dates, status, priority |
+| move_task | Move task to another project |
 | delete_task | Delete task |
 | done_task | Mark task as done |
 | move_task | **Move task to another project** |
+| move_task_under_parent | **Move task under a new parent (subtask)** |
+| move_task_to_project_with_parent | **Move to another project + set parent** |
 | create_task_link | Create dependency between tasks |
 | search_tasks | Search tasks |
 | list_project_members | **List people in project** |
@@ -148,7 +162,7 @@ export function registerMemberTools(server: McpServer, client: ManaClient) {
   // ── move_task — ย้าย task ไป project อื่น ──
   server.tool(
     "move_task",
-    "Move a task (card) and all its subtasks to a different project. Use this when the user says 'ย้ายการ์ด', 'ย้ายงาน', 'move task', 'move card', or wants to relocate work between projects.",
+    "Move a task to a different project. The task and all its subtasks will be moved to the new project.",
     {
       taskId: z.string().describe("ID of the task to move"),
       projectId: z.string().describe("ID of the destination project"),
@@ -159,6 +173,49 @@ export function registerMemberTools(server: McpServer, client: ManaClient) {
         return { content: [{ type: "text", text: `Failed to move task: ${result.data}` }] };
       }
       return { content: [{ type: "text", text: `Task moved successfully to project ${projectId}.` }] };
+    }
+  );
+
+  // ── move_task_under_parent — ย้าย task ไปอยู่ใต้ parent ใหม่ (activity/card) ──
+  server.tool(
+    "move_task_under_parent",
+    "Move a task to become a subtask of another task (parent) in the same project. Use when the user says 'ย้ายไปอยู่ใต้', 'make this a subtask of', 'move under', 'ย้าย parent', or wants to change the parent of a task.",
+    {
+      taskId: z.string().describe("ID of the task to move"),
+      parentId: z.string().describe("ID of the parent task (activity) to move under"),
+      projectId: z.string().describe("Project ID (same project as both tasks)"),
+    },
+    async ({ taskId, parentId, projectId }) => {
+      const result = await client.put(`/move/card/${taskId}`, {
+        projectId: projectId,
+        activityId: parentId,
+      });
+      if (!result.success) {
+        return { content: [{ type: "text", text: `Failed to move task under parent: ${result.data}` }] };
+      }
+      return { content: [{ type: "text", text: `Task moved successfully under parent ${parentId}.` }] };
+    }
+  );
+
+  // ── move_task_to_project_with_parent — ย้าย task ไป project อื่น พร้อมกำหนด parent ──
+  server.tool(
+    "move_task_to_project_with_parent",
+    "Move a task to a different project AND set its parent task in the destination project. Use when moving a task to another project and placing it under a specific parent there.",
+    {
+      taskId: z.string().describe("ID of the task to move"),
+      destinationProjectId: z.string().describe("ID of the destination project"),
+      destinationActivityId: z.string().describe("ID of the parent task in the destination project"),
+    },
+    async ({ taskId, destinationProjectId, destinationActivityId }) => {
+      const result = await client.post("/move/card/to", {
+        taskId: taskId,
+        projectIdMoveTo: destinationProjectId,
+        activityId: destinationActivityId,
+      });
+      if (!result.success) {
+        return { content: [{ type: "text", text: `Failed to move task: ${result.data}` }] };
+      }
+      return { content: [{ type: "text", text: `Task moved to project ${destinationProjectId} under parent ${destinationActivityId}.` }] };
     }
   );
 }

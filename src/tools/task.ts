@@ -181,7 +181,7 @@ ${files || "No files"}`;
 
   server.tool(
     "update_task",
-    "Update an existing task's properties",
+    "Update an existing task's properties. Supports changing parentId to move the task to a different section/swimlane (e.g., 'Ready to dev', 'Dev Done', 'Testing'). Also supports status changes, dates, and more.",
     {
       taskId: z.string().describe("Task ID"),
       name: z.string().optional().describe("New task name"),
@@ -192,8 +192,10 @@ ${files || "No files"}`;
       progress: z.number().optional().describe("Progress (0-1)"),
       // [FIX: TC-T09] priority เป็น Number ใน backend (เหมือน create_task) - 2026-07-30
       priority: z.number().optional().describe("Priority level: 1=Low, 2=Medium, 3=High"),
+      parentId: z.string().optional().describe("Parent task ID — changes which section/swimlane this task belongs to. Use list_tasks to find section IDs. Example: to move to 'Dev Done', set parentId to the Dev Done section's task ID"),
+      status: z.string().optional().describe("Task status: 'active' or 'done'"),
     },
-    async ({ taskId, name, description, startDate, endDate, duration, progress, priority }) => {
+    async ({ taskId, name, description, startDate, endDate, duration, progress, priority, parentId, status }) => {
       const body: Record<string, unknown> = {};
       if (name) body.text = name;
       if (description) body.description = description;
@@ -202,6 +204,9 @@ ${files || "No files"}`;
       if (duration !== undefined) body.duration = duration;
       if (progress !== undefined) body.progress = progress;
       if (priority !== undefined) body.priority = priority;
+      if (parentId) body.parentId = parentId;
+      if (status === "done") body.done = true;
+      if (status === "active") body.done = false;
 
       const res = await client.put(`/data/task/${taskId}`, body);
       // [FIX: BUG-02] ตรวจ `res.success` ก่อนรายงาน success — ก่อนหน้านี้ discard ผลแล้ว
