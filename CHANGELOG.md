@@ -1,5 +1,36 @@
 # Changelog
 
+## 1.2.4
+
+### Added
+
+- `manawork_guide` tool: comprehensive guide for AI agents with workflows,
+  tool reference, and tips. Agents call this when unsure how to accomplish
+  a task instead of saying "I can't do that".
+- `list_project_members`: lists project members with names, emails, roles,
+  and user IDs. Use before assigning tasks.
+- `list_workspace_members`: lists workspace members.
+- `move_card`: universal move tool. Supports section-to-section (same
+  project), cross-project, or both. Optional rename (e.g., `[Dev]` prefix).
+- `copy_card`: copy a card to another project.
+- `move_task_list`: move an entire task list (section) with all cards to
+  a different project.
+- `copy_task_list`: copy an entire task list to a different project.
+- `update_task` now supports `parentId` (change section/swimlane) and
+  `status` ('active' or 'done').
+
+### Changed
+
+- Consolidated confusing `move_task`, `move_task_under_parent`, and
+  `move_task_to_project_with_parent` into a single intuitive `move_card`.
+- Tool descriptions now include usage context (e.g., "Use this before
+  assigning tasks", common user phrases like "ย้ายการ์ด").
+
+### Fixed
+
+- AI agents no longer need raw curl to move cards between sections.
+- AI agents can now discover project members before assigning tasks.
+
 ## 1.2.2
 
 ### Changed

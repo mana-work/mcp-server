@@ -140,13 +140,19 @@ My MANA API key is the one shown above. After adding it, restart and list my wor
 }
 ```
 
-## Available Tools (22)
+## Available Tools (29)
+
+### Guide
+| Tool | Description |
+|------|-------------|
+| `manawork_guide` | Comprehensive guide: workflows, tool reference, tips for AI agents |
 
 ### Workspace
 | Tool | Description |
 |------|-------------|
 | `list_workspaces` | List all workspaces you have access to |
 | `get_workspace` | Get workspace details with members and projects |
+| `list_workspace_members` | List all members with names, emails, roles |
 
 ### Project
 | Tool | Description |
@@ -155,6 +161,7 @@ My MANA API key is the one shown above. After adding it, restart and list my wor
 | `get_project` | Get project details with status and progress |
 | `create_project` | Create a new project |
 | `update_project_status` | Change project status |
+| `list_project_members` | List project members (names, emails, roles, user IDs) |
 
 ### Task
 | Tool | Description |
@@ -162,17 +169,25 @@ My MANA API key is the one shown above. After adding it, restart and list my wor
 | `list_tasks` | List all tasks in a project |
 | `get_task` | Get task details with comments, files, and todo list |
 | `create_task` | Create a new task |
-| `update_task` | Update task properties (name, dates, priority, progress) |
+| `update_task` | Update task properties including **parentId (change section/swimlane)**, name, dates, priority, progress, status |
 | `done_task` | Mark task as completed |
 | `delete_task` | Delete a task |
 | `create_task_link` | Create dependency between tasks |
+
+### Move & Copy
+| Tool | Description |
+|------|-------------|
+| `move_card` | **Universal move**: section-to-section (same project), cross-project, or both. Optional rename (e.g., add `[Dev]` prefix) |
+| `copy_card` | Copy a card to another project |
+| `move_task_list` | Move an entire task list (section) with all cards to a different project |
+| `copy_task_list` | Copy an entire task list to a different project |
 
 ### Collaboration
 | Tool | Description |
 |------|-------------|
 | `add_comment` | Add a comment to a task |
 | `update_comment` | Update an existing comment |
-| `add_assignee` | Assign a user to a task |
+| `add_assignee` | Assign a user to a task (by userId, email, or name) |
 | `remove_assignee` | Remove a user from a task |
 | `add_follower` | Add a follower to a task |
 
@@ -193,6 +208,11 @@ My MANA API key is the one shown above. After adding it, restart and list my wor
 - "Show me all my workspaces"
 - "List projects in workspace X"
 - "Create a task called 'Design homepage' in project Y, due next Friday"
+- "Who's in this project?"
+- "Move this card to Dev Done"
+- "Move the Testing section to project B"
+- "Copy this card to project X"
+- "Assign this task to John"
 - "What tasks are overdue in project X?"
 - "Summarize the progress of project X"
 - "Add a comment to task Z: Please review by tomorrow"
