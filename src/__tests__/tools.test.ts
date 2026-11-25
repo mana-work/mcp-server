@@ -42,14 +42,14 @@ import { registerSearchTools } from "../tools/search.js";
 import { registerAllTools } from "../tools/index.js";
 
 describe("registerAllTools", () => {
-  it("should register all 28 tools", () => {
+  it("should register all 29 tools", () => {
     const server = createMockServer();
     const client = createMockClient() as unknown as import("../client.js").ManaClient;
     registerAllTools(
       server as unknown as import("@modelcontextprotocol/sdk/server/mcp.js").McpServer,
       client
     );
-    expect(server.getNames()).toHaveLength(28);
+    expect(server.getNames()).toHaveLength(29);
   });
 });
 
